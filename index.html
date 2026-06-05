@@ -1,0 +1,388 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AIDoklad Agent — AIDA | Gabriela Tomíčková</title>
+<meta name="description" content="AIDA kontroluje účetní doklady ještě před zaúčtováním. Odhalí chyby v DPH, duplicity, chybějící údaje. Pro účetní, kanceláře i OSVČ.">
+<link rel="icon" type="image/svg+xml" href="/favicon.svg">
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@700;800;900&family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root {
+  --gold:#e9a91b; --gold-dark:#c48e10; --gold-light:#fdf3d9;
+  --black:#000; --dark:#111; --mid:#545454; --light:#a8a6a6;
+  --white:#fff; --paper:#f5f4f0; --border:#e2e2e2;
+}
+*{margin:0;padding:0;box-sizing:border-box;}
+html{scroll-behavior:smooth;}
+body{font-family:"DM Sans",sans-serif;background:var(--paper);color:var(--dark);line-height:1.6;}
+
+/* NAV */
+nav{background:var(--white);border-bottom:2px solid var(--gold);padding:12px 24px;display:flex;justify-content:space-between;align-items:center;position:sticky;top:0;z-index:100;box-shadow:0 2px 10px rgba(0,0,0,.06);}
+.nav-brand{font-family:"Poppins",sans-serif;font-size:14px;font-weight:800;color:var(--black);}
+.nav-brand span{color:var(--gold);}
+.nav-back{font-size:13px;color:var(--mid);text-decoration:none;}
+.nav-back:hover{color:var(--gold-dark);}
+.nav-cta{background:var(--gold);color:var(--black);font-size:12px;font-weight:700;padding:7px 16px;border-radius:4px;text-decoration:none;transition:background .2s;}
+.nav-cta:hover{background:var(--gold-dark);}
+
+/* HERO */
+.hero{background:var(--black);padding:60px 24px 50px;position:relative;overflow:hidden;}
+.hero::before{content:"";position:absolute;top:-80px;right:-80px;width:400px;height:400px;border-radius:50%;border:60px solid rgba(233,169,27,.06);pointer-events:none;}
+.hero-inner{max-width:640px;margin:0 auto;position:relative;z-index:1;}
+.hero-tag{display:inline-block;background:rgba(233,169,27,.15);border:1px solid rgba(233,169,27,.3);color:var(--gold);font-size:10px;font-weight:700;letter-spacing:2px;text-transform:uppercase;padding:4px 12px;border-radius:2px;margin-bottom:20px;}
+.hero h1{font-family:"Poppins",sans-serif;font-size:clamp(24px,4vw,38px);font-weight:900;color:var(--white);line-height:1.15;letter-spacing:-.5px;margin-bottom:16px;}
+.hero h1 em{color:var(--gold);font-style:normal;}
+.hero-sub{font-size:15px;color:rgba(255,255,255,.55);line-height:1.75;max-width:520px;margin-bottom:28px;}
+.hero-btns{display:flex;gap:12px;flex-wrap:wrap;}
+.btn-gold{background:var(--gold);color:var(--black);font-family:"Poppins",sans-serif;font-size:14px;font-weight:800;padding:13px 28px;border-radius:4px;text-decoration:none;transition:all .2s;display:inline-block;}
+.btn-gold:hover{background:var(--gold-dark);color:white;}
+.btn-outline{background:transparent;color:rgba(255,255,255,.6);font-size:13px;font-weight:500;padding:13px 20px;border:1px solid rgba(255,255,255,.15);border-radius:4px;text-decoration:none;transition:all .2s;display:inline-block;}
+.btn-outline:hover{border-color:var(--gold);color:var(--gold);}
+
+/* SEKCE */
+.sekce{padding:56px 24px;}
+.sekce-inner{max-width:800px;margin:0 auto;}
+.sekce-tag{font-size:10px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--gold);margin-bottom:10px;}
+.sekce h2{font-family:"Poppins",sans-serif;font-size:clamp(20px,3vw,28px);font-weight:900;color:var(--dark);line-height:1.2;margin-bottom:24px;}
+
+/* CO HLÍDÁ */
+.hlida-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:10px;margin-top:8px;}
+.hlida-item{background:var(--white);border:1px solid var(--border);border-radius:8px;padding:14px 16px;display:flex;align-items:center;gap:10px;}
+.arr{width:0;height:0;border-top:5px solid transparent;border-bottom:5px solid transparent;border-left:8px solid var(--gold);flex-shrink:0;}
+.hlida-item span{font-size:13px;font-weight:500;color:var(--dark);}
+
+/* JAK TO FUNGUJE */
+.kroky{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:14px;margin-top:8px;}
+.krok{background:var(--white);border:1px solid var(--border);border-radius:10px;padding:18px 16px;}
+.krok-num{font-family:"Poppins",sans-serif;font-size:11px;font-weight:800;color:var(--gold);letter-spacing:1px;margin-bottom:6px;}
+.krok p{font-size:13px;color:var(--mid);line-height:1.65;}
+
+/* PRO KOHO */
+.prokoho-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:8px;}
+.prokoho-card{background:var(--white);border:1px solid var(--border);border-radius:10px;padding:20px;}
+.prokoho-card h3{font-family:"Poppins",sans-serif;font-size:14px;font-weight:800;color:var(--dark);margin-bottom:12px;}
+.prokoho-card ul{list-style:none;display:flex;flex-direction:column;gap:7px;}
+.prokoho-card li{display:flex;align-items:flex-start;gap:8px;font-size:13px;color:var(--mid);}
+
+/* PILOT */
+.pilot-box{background:var(--white);border:1px solid var(--border);border-radius:12px;padding:28px 24px;}
+.pilot-list{list-style:none;display:flex;flex-direction:column;gap:10px;margin:16px 0 24px;}
+.pilot-list li{display:flex;align-items:flex-start;gap:10px;font-size:14px;color:var(--mid);}
+
+/* FAQ */
+.faq-list{display:flex;flex-direction:column;gap:4px;}
+.faq-item{background:var(--white);border:1px solid var(--border);border-radius:8px;overflow:hidden;}
+.faq-q{padding:14px 18px;font-size:14px;font-weight:600;color:var(--dark);cursor:pointer;display:flex;justify-content:space-between;align-items:center;user-select:none;}
+.faq-q::after{content:"";width:8px;height:8px;border-right:2px solid var(--light);border-bottom:2px solid var(--light);transform:rotate(45deg);transition:transform .2s;flex-shrink:0;margin-left:12px;margin-bottom:3px;}
+.faq-item.open .faq-q::after{transform:rotate(-135deg);margin-bottom:-3px;}
+.faq-a{display:none;padding:0 18px 14px;font-size:13px;color:var(--mid);line-height:1.7;}
+.faq-item.open .faq-a{display:block;}
+.faq-group{margin-bottom:24px;}
+.faq-group-title{font-size:10px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--gold);margin-bottom:8px;padding-left:4px;}
+
+/* CTA BANNER */
+.cta-banner{background:var(--dark);padding:56px 24px;text-align:center;}
+.cta-banner h2{font-family:"Poppins",sans-serif;font-size:clamp(20px,3vw,28px);font-weight:900;color:var(--white);margin-bottom:12px;}
+.cta-banner p{font-size:14px;color:rgba(255,255,255,.5);margin-bottom:28px;max-width:460px;margin-left:auto;margin-right:auto;}
+
+/* O MNĚ */
+.o-mne{background:var(--white);border-top:1px solid var(--border);padding:40px 24px;}
+.o-mne-inner{max-width:640px;margin:0 auto;}
+.o-mne p{font-size:14px;color:var(--mid);line-height:1.8;}
+
+/* FOOTER */
+footer{background:#0a0a0a;padding:28px 24px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:16px;}
+.footer-brand{font-family:"Poppins",sans-serif;font-size:12px;font-weight:700;color:rgba(255,255,255,.3);}
+.footer-brand span{color:var(--gold);}
+.footer-links{display:flex;gap:20px;}
+.footer-links a{font-size:12px;color:rgba(255,255,255,.3);text-decoration:none;}
+.footer-links a:hover{color:var(--gold);}
+
+/* COOKIES */
+.cookies-bar{position:fixed;bottom:0;left:0;right:0;background:#111;border-top:2px solid var(--gold);padding:14px 24px;display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap;z-index:9999;}
+.cookies-bar p{font-size:13px;color:rgba(255,255,255,.6);line-height:1.6;margin:0;flex:1;min-width:200px;}
+.cookies-bar a{color:var(--gold);text-decoration:none;}
+.cookies-btns{display:flex;gap:8px;flex-shrink:0;}
+.cookies-ok{background:var(--gold);color:#000;border:none;border-radius:4px;padding:8px 18px;font-family:"DM Sans",sans-serif;font-size:13px;font-weight:700;cursor:pointer;}
+.cookies-no{background:transparent;color:rgba(255,255,255,.4);border:1px solid rgba(255,255,255,.15);border-radius:4px;padding:8px 14px;font-family:"DM Sans",sans-serif;font-size:13px;cursor:pointer;}
+
+@media(max-width:600px){
+  .prokoho-grid{grid-template-columns:1fr;}
+  .kroky{grid-template-columns:1fr 1fr;}
+  footer{flex-direction:column;text-align:center;}
+}
+</style>
+</head>
+<body>
+
+<div class="cookies-bar" id="cookies-bar" style="display:none;">
+  <p>Tento web používá analytické cookies (Google Analytics). <a href="https://gdpr.gabrielatomickova.cz">Zásady ochrany osobních údajů</a></p>
+  <div class="cookies-btns">
+    <button class="cookies-no" onclick="cookiesOdmitnout()">Odmítnout</button>
+    <button class="cookies-ok" onclick="cookiesSouhlasit()">Souhlasím</button>
+  </div>
+</div>
+
+<nav>
+  <a href="https://gabrielatomickova.cz" class="nav-back">← Gabriela Tomíčková</a>
+  <div class="nav-brand">AI<span>Doklad</span> Agent</div>
+  <a href="https://aidokladagent.cz" target="_blank" class="nav-cta">Vyzkoušet AIDU</a>
+</nav>
+
+<!-- HERO -->
+<section class="hero">
+  <div class="hero-inner">
+    <div class="hero-tag">AI nástroj pro účetní doklady</div>
+    <h1>Chyby v dokladech<br>odhalí <em>AIDA</em>.<br>Ne váš účetní.</h1>
+    <p class="hero-sub">Nahrajte doklad, AIDA zkontroluje data a v tabulce hned vidíte co je potřeba opravit. Ještě před tím než doklady putují do účetnictví.</p>
+    <div class="hero-btns">
+      <a href="https://aidokladagent.cz" target="_blank" class="btn-gold">Vyzkoušet 20 dokladů zdarma</a>
+      <a href="#jak-funguje" class="btn-outline">Jak to funguje</a>
+    </div>
+  </div>
+</section>
+
+<!-- BOLEST -->
+<section class="sekce" style="background:var(--white);border-bottom:1px solid var(--border);">
+  <div class="sekce-inner" style="max-width:640px;">
+    <p style="font-size:16px;font-weight:600;color:var(--dark);line-height:1.7;margin-bottom:10px;">Trávíte čas dohledáváním chyb v dokladech? Nesedí DPH, objevují se duplicity nebo chybí důležité údaje?</p>
+    <p style="font-size:14px;color:var(--mid);line-height:1.8;">Tohle jsou věci které se zjistí až při účtování. AIDA je odhalí dřív.</p>
+  </div>
+</section>
+
+<!-- CO HLÍDÁ -->
+<section class="sekce">
+  <div class="sekce-inner">
+    <div class="sekce-tag">Co AIDA hlídá</div>
+    <h2>Co zkontroluje za vás</h2>
+    <div class="hlida-grid">
+      <div class="hlida-item"><div class="arr"></div><span>Správnost částek a DPH</span></div>
+      <div class="hlida-item"><div class="arr"></div><span>Shoda názvu firmy a IČ dle ARES</span></div>
+      <div class="hlida-item"><div class="arr"></div><span>Duplicitní doklady</span></div>
+      <div class="hlida-item"><div class="arr"></div><span>Logika dat</span></div>
+      <div class="hlida-item"><div class="arr"></div><span>Formát IČ</span></div>
+      <div class="hlida-item"><div class="arr"></div><span>Povinné údaje</span></div>
+      <div class="hlida-item"><div class="arr"></div><span>Formát DIČ</span></div>
+      <div class="hlida-item"><div class="arr"></div><span>Připravenost k exportu</span></div>
+    </div>
+  </div>
+</section>
+
+<!-- JAK FUNGUJE -->
+<section class="sekce" id="jak-funguje" style="background:var(--white);">
+  <div class="sekce-inner">
+    <div class="sekce-tag">Jak to funguje</div>
+    <h2>Čtyři kroky, žádná magie</h2>
+    <div class="kroky">
+      <div class="krok">
+        <div class="krok-num">Krok 1</div>
+        <p>Nahrajete doklad z PC nebo ho vyfotíte mobilní aplikací. PDF, JPG, PNG, HEIC.</p>
+      </div>
+      <div class="krok">
+        <div class="krok-num">Krok 2</div>
+        <p>AIDA vytěží základní údaje a zapíše je do přehledné tabulky.</p>
+      </div>
+      <div class="krok">
+        <div class="krok-num">Krok 3</div>
+        <p>Jedním kliknutím spustíte kontrolu. AIDA barevně označí nesrovnalosti.</p>
+      </div>
+      <div class="krok">
+        <div class="krok-num">Krok 4</div>
+        <p>Vidíte přesně co opravit. Data upravíte a exportujete do účetního softwaru.</p>
+      </div>
+    </div>
+    <p style="margin-top:16px;font-size:13px;color:var(--light);">Žádná složitá instalace. Funguje online, stačí otevřít složku a tabulku.</p>
+  </div>
+</section>
+
+<!-- PRO KOHO -->
+<section class="sekce">
+  <div class="sekce-inner">
+    <div class="sekce-tag">Pro koho</div>
+    <h2>Účetní, kanceláře i OSVČ</h2>
+    <div class="prokoho-grid">
+      <div class="prokoho-card">
+        <h3>Účetní a účetní kanceláře</h3>
+        <ul>
+          <li><div class="arr"></div>méně ruční kontroly</li>
+          <li><div class="arr"></div>rychlejší odhalení chyb</li>
+          <li><div class="arr"></div>méně stresu při uzávěrkách</li>
+          <li><div class="arr"></div>doklady podle klientů odděleně</li>
+        </ul>
+      </div>
+      <div class="prokoho-card">
+        <h3>OSVČ a malé firmy</h3>
+        <ul>
+          <li><div class="arr"></div>jednoduchý sběr dokladů</li>
+          <li><div class="arr"></div>méně času nad účetnictvím</li>
+          <li><div class="arr"></div>bez zbytečné složitosti</li>
+          <li><div class="arr"></div>funguje jako doplněk k vašemu procesu</li>
+        </ul>
+      </div>
+    </div>
+    <p style="margin-top:16px;font-size:13px;color:var(--light);">AIDA nedává největší smysl tam kde je dokladů málo nebo kde potřebujete položkový rozpis faktur.</p>
+  </div>
+</section>
+
+<!-- PILOT -->
+<section class="sekce" style="background:var(--white);" id="pilot">
+  <div class="sekce-inner" style="max-width:640px;">
+    <div class="sekce-tag">Pilotní verze</div>
+    <h2>Co dostanete v pilotu</h2>
+    <div class="pilot-box">
+      <ul class="pilot-list">
+        <li><div class="arr"></div>Přístup do testovacího prostředí</li>
+        <li><div class="arr"></div>Možnost nahrát až 20 dokladů zdarma</li>
+        <li><div class="arr"></div>Mobilní aplikaci AIDA Scan pro snadné nahrávání dokladů</li>
+        <li><div class="arr"></div>Přehledovou tabulku pro kontrolu vytěžených údajů</li>
+        <li><div class="arr"></div>Průvodce AIDOU a vysvětlivky kontrol</li>
+        <li><div class="arr"></div>Krátké videonávody k práci s AIDOU</li>
+        <li><div class="arr"></div>Podporu při prvním nastavení</li>
+      </ul>
+      <p style="font-size:13px;color:var(--mid);margin-bottom:20px;">Stačí vyplnit krátký formulář. Zabere asi 2 minuty a instrukce k pilotnímu testu vám pošlu e-mailem.</p>
+      <a href="https://aidokladagent.cz" target="_blank" class="btn-gold" style="display:inline-block;">Chci vyzkoušet 20 dokladů zdarma</a>
+    </div>
+  </div>
+</section>
+
+<!-- FAQ -->
+<section class="sekce">
+  <div class="sekce-inner">
+    <div class="sekce-tag">Časté dotazy</div>
+    <h2>Co se lidé ptají</h2>
+
+    <div class="faq-group">
+      <div class="faq-group-title">Co AIDA je a není</div>
+      <div class="faq-list">
+        <div class="faq-item">
+          <div class="faq-q">Co je AIDA a s čím mi pomůže?</div>
+          <div class="faq-a">AIDA pomáhá se zpracováním a kontrolou přijatých účetních dokladů. Uloží, vytěží a zkontroluje důležitá data z faktur a účtenek. Odhalí chyby a nesrovnalosti ještě před zaúčtováním.</div>
+        </div>
+        <div class="faq-item">
+          <div class="faq-q">Je AIDA účetní software?</div>
+          <div class="faq-a">Ne. AIDA je nástroj pro kontrolu dokladů před účetním programem. Pomáhá hlídat DPH, duplicity a chybějící údaje a připravit data k exportu. Váš účetní software zůstává.</div>
+        </div>
+        <div class="faq-item">
+          <div class="faq-q">V čem se AIDA liší od běžného vytěžování faktur?</div>
+          <div class="faq-a">AIDA data z dokladů nejen vytěží, ale také je automaticky zkontroluje. Hlídá chyby, nesrovnalosti, duplicity a správnost údajů před zaúčtováním. Pomáhá tak snížit chybovost v účetnictví.</div>
+        </div>
+        <div class="faq-item">
+          <div class="faq-q">Pro koho AIDA není vhodná?</div>
+          <div class="faq-a">AIDA není vhodná pro ty, kdo chtějí plně automatické účetnictví bez kontroly. Méně vhodná je pro velmi složité nebo nestandardní doklady a pro uživatele, kteří potřebují položkový rozpis faktur. Největší přínos má při práci s desítkami dokladů měsíčně.</div>
+        </div>
+        <div class="faq-item">
+          <div class="faq-q">Nahradí AIDA účetní?</div>
+          <div class="faq-a">Ne. AIDA nenahrazuje účetní ani účetní software. Slouží jako nástroj pro kontrolu dokladů před zaúčtováním. Pomáhá účetním pracovat rychleji a s menší chybovostí.</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="faq-group">
+      <div class="faq-group-title">Jak funguje</div>
+      <div class="faq-list">
+        <div class="faq-item">
+          <div class="faq-q">Musím něco složitě instalovat?</div>
+          <div class="faq-a">Ne. AIDA nevyžaduje žádnou složitou instalaci. Funguje online, stačí otevřít složku a tabulku a začít pracovat s doklady. Doklady můžete nahrávat z PC nebo fotit mobilem bez nastavování.</div>
+        </div>
+        <div class="faq-item">
+          <div class="faq-q">Co všechno potřebuji, abych s AIDOU mohl pracovat?</div>
+          <div class="faq-a">Stačí mít doklady (faktury přijaté, účtenky), přístup k PC, Google účet, připojení k internetu a případně mobil pro focení dokladů.</div>
+        </div>
+        <div class="faq-item">
+          <div class="faq-q">Vadí, když je doklad špatně vyfocený nebo je nakřivo?</div>
+          <div class="faq-a">AIDA si poradí i s méně kvalitními nebo nakřivo vyfocenými doklady. Platí pravidlo: čím kvalitnější vstup, tím kvalitnější výstup. V případě nesrovnalostí AIDA doklad označí.</div>
+        </div>
+        <div class="faq-item">
+          <div class="faq-q">Musím kvůli AIDĚ měnit svůj současný proces?</div>
+          <div class="faq-a">Ne. AIDA se přizpůsobí vašemu stávajícímu procesu práce s doklady. Funguje jako doplněk k vašemu účetnictví, takže není potřeba měnit účetní software ani postupy.</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="faq-group">
+      <div class="faq-group-title">Kontroly a přínos</div>
+      <div class="faq-list">
+        <div class="faq-item">
+          <div class="faq-q">Jaké chyby umí AIDA odhalit?</div>
+          <div class="faq-a">Nesrovnalosti v DPH, základu a celkové částce. Duplicitní doklady a chybějící povinné údaje (např. IČO, DIČ). Shoda názvu firmy dle ARES. Logiku dat a připravenost k exportu.</div>
+        </div>
+        <div class="faq-item">
+          <div class="faq-q">Umí AIDA najít duplicitní doklady?</div>
+          <div class="faq-a">Ano. AIDA automaticky odhalí duplicitní doklady. Porovnává klíčové údaje jako částky, dodavatele nebo datumy. Duplicitu označí, takže ji můžete rychle zkontrolovat před zaúčtováním.</div>
+        </div>
+        <div class="faq-item">
+          <div class="faq-q">Pomůže AIDA zkrátit čas na kontrole dokladů?</div>
+          <div class="faq-a">Ano. Pre-kontrola AIDA výrazně zrychluje kontrolu účetních dokladů. Automaticky označí chyby, takže řešíte jen to, co je potřeba. Odpadá zdlouhavé zpětné hledání nesrovnalostí v DPH, částkách a údajích.</div>
+        </div>
+        <div class="faq-item">
+          <div class="faq-q">Kdy dává větší smysl AIDA než samotné OCR?</div>
+          <div class="faq-a">Když potřebujete nejen data vytěžit, ale hlavně je zkontrolovat (DPH, částky, chyby). Když trávíte čas dohledáváním nesrovnalostí v dokladech. Když chcete mít doklady ověřené a připravené pro účetní software bez chyb.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- CTA -->
+<section class="cta-banner">
+  <h2>Vyzkoušejte AIDU na vlastních dokladech</h2>
+  <p>20 dokladů zdarma. Stačí vyplnit krátký formulář a instrukce vám pošlu emailem.</p>
+  <a href="https://aidokladagent.cz" target="_blank" class="btn-gold">Chci vyzkoušet zdarma</a>
+</section>
+
+<!-- O MNĚ -->
+<section class="o-mne">
+  <div class="o-mne-inner">
+    <div class="sekce-tag" style="margin-bottom:10px;">Za projektem</div>
+    <p>Za AIDOU stojím já, Gabriela Tomíčková. AIDU vyvíjím jako praktický nástroj pro účetní a firmy, které chtějí mít doklady pod kontrolou ještě před zaúčtováním. Máte dotaz? Napište na <a href="mailto:info@aidokladagent.cz" style="color:var(--gold);text-decoration:none;">info@aidokladagent.cz</a></p>
+  </div>
+</section>
+
+<footer>
+  <div class="footer-brand">Gabriela <span>Tomíčková</span> · IČO: 75905311</div>
+  <div class="footer-links">
+    <a href="https://gabrielatomickova.cz">Web</a>
+    <a href="https://gdpr.gabrielatomickova.cz">Ochrana osobních údajů</a>
+    <a href="mailto:info@aidokladagent.cz">info@aidokladagent.cz</a>
+  </div>
+</footer>
+
+<script>
+document.querySelectorAll('.faq-q').forEach(q => {
+  q.addEventListener('click', () => {
+    const item = q.parentElement;
+    const wasOpen = item.classList.contains('open');
+    document.querySelectorAll('.faq-item').forEach(i => i.classList.remove('open'));
+    if (!wasOpen) item.classList.add('open');
+  });
+});
+
+(function(){
+  var s = localStorage.getItem('cookies_souhlas');
+  if (s === 'ano') spustitGA();
+  else if (s === null) document.getElementById('cookies-bar').style.display = 'flex';
+})();
+function spustitGA() {
+  var s = document.createElement('script');
+  s.async = true;
+  s.src = 'https://www.googletagmanager.com/gtag/js?id=G-JBFDH4G4VP';
+  document.head.appendChild(s);
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  window.gtag = gtag;
+  gtag('js', new Date());
+  gtag('config', 'G-JBFDH4G4VP');
+}
+function cookiesSouhlasit() {
+  localStorage.setItem('cookies_souhlas', 'ano');
+  document.getElementById('cookies-bar').style.display = 'none';
+  spustitGA();
+}
+function cookiesOdmitnout() {
+  localStorage.setItem('cookies_souhlas', 'ne');
+  document.getElementById('cookies-bar').style.display = 'none';
+}
+</script>
+</body>
+</html>
